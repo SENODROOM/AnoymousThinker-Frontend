@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const ChatContext = createContext(null);
 
@@ -14,7 +14,7 @@ export const ChatProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await axios.get('/api/chat/conversations');
+      const res = await api.get('/api/chat/conversations');
       setConversations(res.data);
     } catch (err) {
       setError('Failed to load conversations');
@@ -26,7 +26,7 @@ export const ChatProvider = ({ children }) => {
   const createConversation = useCallback(async () => {
     try {
       setError(null);
-      const res = await axios.post('/api/chat/conversations', { title: 'New Chat' });
+      const res = await api.post('/api/chat/conversations', { title: 'New Chat' });
       const newConv = res.data;
       setConversations(prev => [{
         ...newConv,
@@ -51,7 +51,7 @@ export const ChatProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await axios.get(`/api/chat/conversations/${id}`);
+      const res = await api.get(`/api/chat/conversations/${id}`);
       setCurrentConversation(res.data);
       return res.data;
     } catch (err) {
@@ -69,7 +69,7 @@ export const ChatProvider = ({ children }) => {
     try {
       setSending(true);
       setError(null);
-      const res = await axios.post(
+      const res = await api.post(
         `/api/chat/conversations/${conversationId}/message`,
         { content, compare }
       );
@@ -106,7 +106,7 @@ export const ChatProvider = ({ children }) => {
   const deleteConversation = useCallback(async (id) => {
     try {
       setError(null);
-      await axios.delete(`/api/chat/conversations/${id}`);
+      await api.delete(`/api/chat/conversations/${id}`);
       setConversations(prev => prev.filter(c => c._id !== id));
       if (currentConversation?._id === id) {
         setCurrentConversation(null);
@@ -119,7 +119,7 @@ export const ChatProvider = ({ children }) => {
   const renameConversation = useCallback(async (id, title) => {
     try {
       setError(null);
-      await axios.put(`/api/chat/conversations/${id}`, { title });
+      await api.put(`/api/chat/conversations/${id}`, { title });
       setConversations(prev => prev.map(c =>
         c._id === id ? { ...c, title } : c
       ));

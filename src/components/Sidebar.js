@@ -68,10 +68,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
         <div className="sidebar__header">
           <div className="sidebar__logo">
             <div className="sidebar__logo-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="3" fill="currentColor" />
-                <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+              <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <span className="sidebar__logo-text">AnonymousThinker</span>
           </div>

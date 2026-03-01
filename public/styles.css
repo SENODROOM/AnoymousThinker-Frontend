@@ -241,6 +241,22 @@ textarea {
     box-shadow: 0 0 28px rgba(124, 58, 237, 0.6);
 }
 
+.auth-logo__icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-logo__icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 12px rgba(124, 58, 237, 0.3));
+}
+
 .sidebar__logo-text {
     font-size: 0.875rem;
     font-weight: 700;
@@ -608,42 +624,41 @@ textarea {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 24px 32px;
-    gap: 28px;
+    padding: 60px 24px;
     min-height: 100%;
-    animation: fadeInUp 0.6s var(--ease-out);
+    animation: fadeInUp 0.7s var(--ease-out);
 }
 
 .welcome__logo {
-    width: 78px;
-    height: 78px;
-    background: linear-gradient(135deg, var(--purple-500), var(--purple-700));
-    border-radius: 22px;
+    width: 100px;
+    height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.35), 0 0 52px rgba(124, 58, 237, 0.35), 0 20px 48px rgba(0, 0, 0, 0.45);
-    animation: scaleIn 0.5s var(--ease-spring);
+    animation: scaleIn 0.6s var(--ease-spring);
     position: relative;
+    z-index: 1;
+    margin-bottom: -10px;
 }
 
-.welcome__logo::after {
-    content: '';
-    position: absolute;
-    inset: -6px;
-    border-radius: 28px;
-    background: radial-gradient(circle, rgba(124, 58, 237, 0.15), transparent 70%);
-    z-index: -1;
+.welcome__logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(124, 58, 237, 0.4));
 }
+
+/* Removed legacy logo glow */
 
 .welcome__title {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     font-weight: 800;
     letter-spacing: -0.04em;
     text-align: center;
     margin: 0;
-    animation: fadeInUp 0.5s var(--ease-out) 0.1s both;
-    background: linear-gradient(135deg, #eaeaf6 30%, #a78bfa 70%, #7c3aed);
+    line-height: 1.2;
+    animation: fadeInUp 0.6s var(--ease-out) 0.1s both;
+    background: linear-gradient(135deg, #ffffff 20%, #c4b5fd 50%, #8b5cf6 90%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -651,11 +666,14 @@ textarea {
 
 .welcome__subtitle {
     color: var(--text-secondary);
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-family: var(--font-mono);
     text-align: center;
-    margin: 0;
-    animation: fadeInUp 0.5s var(--ease-out) 0.2s both;
+    margin: 10px 0 0;
+    max-width: 500px;
+    line-height: 1.6;
+    animation: fadeInUp 0.6s var(--ease-out) 0.2s both;
+    opacity: 0.9;
 }
 
 .welcome__subtitle::after {
@@ -669,26 +687,30 @@ textarea {
 .suggestions {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    max-width: 640px;
+    gap: 16px;
+    max-width: 720px;
     width: 100%;
-    animation: fadeInUp 0.5s var(--ease-out) 0.3s both;
+    margin-top: 10px;
+    animation: fadeInUp 0.7s var(--ease-out) 0.3s both;
 }
 
 .suggestion-card {
-    background: var(--bg-glass);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
-    padding: 16px 18px;
+    background: rgba(20, 20, 35, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 22px 24px;
     cursor: pointer;
-    text-align: left;
+    /* text-align: left; */
     display: flex;
-    flex-direction: column;
-    gap: 7px;
+    /* flex-direction: column; */
+    gap: 10px;
     font-family: var(--font-sans);
-    transition: all 0.22s var(--ease-out);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    justify-content: center;
+    align-items: center;
 }
 
 .suggestion-card::before {
@@ -701,10 +723,12 @@ textarea {
 }
 
 .suggestion-card:hover {
-    background: var(--bg-glass-hover);
-    border-color: rgba(124, 58, 237, 0.22);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(124, 58, 237, 0.14);
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.3);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(124, 58, 237, 0.2);
 }
 
 .suggestion-card:hover::before {
@@ -712,7 +736,8 @@ textarea {
 }
 
 .suggestion-card__icon {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
+    filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.4));
 }
 
 .suggestion-card__label {

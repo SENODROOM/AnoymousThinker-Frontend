@@ -6,10 +6,10 @@ import Sidebar from '../components/Sidebar';
 import MessageBubble, { TypingIndicator } from '../components/MessageBubble';
 
 const WELCOME_PROMPTS = [
-  "What's on your mind?",
-  "Ask me anything — I'm thinking.",
-  "Explore an idea with me.",
-  "Let's reason through something together.",
+  "How can I help you defend the truth today?",
+  "Ready to explore logical proofs and theological depth.",
+  "Ask me anything about comparative religion or logic.",
+  "Let's reason through the most challenging questions together.",
 ];
 
 const ChatPage = () => {
@@ -135,21 +135,17 @@ const ChatPage = () => {
           {isNewChat ? (
             <div className="welcome">
               <div className="welcome__logo">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="3" fill="white" />
-                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M5.5 5.5l2.8 2.8M15.7 15.7l2.8 2.8M5.5 18.5l2.8-2.8M15.7 8.3l2.8-2.8" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-                </svg>
+                <img src="/logo.png" alt="Logo" />
               </div>
               <h1 className="welcome__title">AnonymousThinker</h1>
               <p className="welcome__subtitle">{welcomePrompt}</p>
 
               <div className="suggestions">
                 {[
-                  { icon: '💡', text: 'Explain quantum entanglement simply', label: 'Science' },
-                  { icon: '🧠', text: 'What are the most effective study techniques?', label: 'Learning' },
-                  { icon: '🚀', text: 'How do I start a tech startup in 2024?', label: 'Business' },
-                  { icon: '📝', text: 'Write a haiku about artificial intelligence', label: 'Creative' },
+                  { icon: '🛡️', text: 'Logically refute the claim that the universe has no beginning', label: 'LOGIC' },
+                  { icon: '☪️', text: 'Key theological differences between Islam and Christianity', label: 'COMPARATIVE' },
+                  { icon: '📜', text: 'Explain the preservation of the Quranic text recorded in history', label: 'HISTORY' },
+                  { icon: '🧠', text: 'Respond to the "Problem of Evil" from an Islamic perspective', label: 'PHILOSOPHY' },
                 ].map((s, i) => (
                   <button key={i} onClick={() => handleSuggestion(s.text)} className="suggestion-card">
                     <span className="suggestion-card__icon">{s.icon}</span>

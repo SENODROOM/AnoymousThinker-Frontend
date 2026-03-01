@@ -110,7 +110,7 @@ const TrainingPage = () => {
   if (loading) {
     return (
       <div className="loading-screen">
-        <div className="spinner" />
+        <img src="/logo.png" alt="Logo" className="spinner-logo" style={{ width: '60px', height: '60px', marginBottom: '2rem', animation: 'pulse 2s infinite' }} />
         <p className="fade-in">Establishing secure connection to Hub...</p>
       </div>
     );
@@ -123,11 +123,7 @@ const TrainingPage = () => {
       <main className={`main ${sidebarOpen ? 'main--sidebar-open' : ''}`}>
         <div className="topbar">
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="topbar__menu-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
+            <img src="/logo.png" alt="Menu" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
           </button>
           <div className="topbar__title">AI Command Center</div>
         </div>

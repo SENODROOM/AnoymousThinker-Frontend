@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
-    if (process.env.NODE_ENV === 'production') {
-        return 'https://anonymous-thinker-api.vercel.app';
+    if (process.env.REACT_APP_API_URL) {
+        return process.env.REACT_APP_API_URL;
     }
     return 'http://localhost:5000';
 };

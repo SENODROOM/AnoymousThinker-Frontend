@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import Sidebar from '../components/Sidebar';
 
 const TrainingPage = () => {
@@ -28,7 +28,7 @@ const TrainingPage = () => {
 
   const fetchTrainingData = useCallback(async () => {
     try {
-      const { data } = await axios.get('/api/training/persona');
+      const { data } = await api.get('/api/training/persona');
       if (data) {
         setPersona(data.persona || '');
         setSystemPrompt(data.text || '');
@@ -42,7 +42,7 @@ const TrainingPage = () => {
 
   const fetchKnowledge = useCallback(async () => {
     try {
-      const { data } = await axios.get('/api/training/knowledge');
+      const { data } = await api.get('/api/training/knowledge');
       setKnowledgeList(data);
     } catch (err) {
       console.error('Failed to fetch knowledge:', err);
@@ -59,7 +59,7 @@ const TrainingPage = () => {
     setError(null);
     setSuccess(null);
     try {
-      await axios.post('/api/training/persona', {
+      await api.post('/api/training/persona', {
         persona,
         text: systemPrompt
       });
@@ -82,7 +82,7 @@ const TrainingPage = () => {
     formData.append('file', file);
 
     try {
-      await axios.post('/api/training/knowledge/upload', formData, {
+      await api.post('/api/training/knowledge/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setSuccess(`Knowledge source "${file.name}" added`);
@@ -99,7 +99,7 @@ const TrainingPage = () => {
     if (!window.confirm(`Permanently remove knowledge extracted from "${fileName}"?`)) return;
 
     try {
-      await axios.delete(`/api/training/knowledge/${encodeURIComponent(fileName)}`);
+      await api.delete(`/api/training/knowledge/${encodeURIComponent(fileName)}`);
       fetchKnowledge();
       setSuccess('Knowledge source removed');
     } catch (err) {

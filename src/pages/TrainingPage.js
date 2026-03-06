@@ -14,14 +14,15 @@ const TrainingPage = () => {
   // Knowledge Base State
   const [knowledgeList, setKnowledgeList] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [reindexing, setReindexing] = useState(false);
 
-  // Clear alerts after 5 seconds
+  // Pinecone Status
+  const [pineconeStatus, setPineconeStatus] = useState(null);
+
+  // Clear alerts after 6 seconds
   useEffect(() => {
     if (error || success) {
-      const timer = setTimeout(() => {
-        setError(null);
-        setSuccess(null);
-      }, 5000);
+      const timer = setTimeout(() => { setError(null); setSuccess(null); }, 6000);
       return () => clearTimeout(timer);
     }
   }, [error, success]);
@@ -49,25 +50,42 @@ const TrainingPage = () => {
     }
   }, []);
 
+  const fetchPineconeStatus = useCallback(async () => {
+    try {
+      const { data } = await api.get('/api/training/knowledge/status');
+      setPineconeStatus(data);
+    } catch (err) {
+      console.error('Failed to fetch Pinecone status:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchTrainingData();
     fetchKnowledge();
-  }, [fetchTrainingData, fetchKnowledge]);
+    fetchPineconeStatus();
+  }, [fetchTrainingData, fetchKnowledge, fetchPineconeStatus]);
 
   const handleSavePersona = async () => {
     setSaving(true);
     setError(null);
     setSuccess(null);
     try {
-      await api.post('/api/training/persona', {
-        persona,
-        text: systemPrompt
-      });
-      setSuccess('Persona and strategy updated successfully');
+      await api.post('/api/training/persona', { persona, text: systemPrompt });
+      setSuccess('✅ Persona and strategy updated successfully');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update persona');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLoadDefault = async () => {
+    try {
+      const { data } = await api.get('/api/training/default-persona');
+      setSystemPrompt(data.text);
+      setSuccess('Default persona loaded — click "Commit Changes" to save.');
+    } catch (err) {
+      setError('Failed to load default persona');
     }
   };
 
@@ -82,11 +100,15 @@ const TrainingPage = () => {
     formData.append('file', file);
 
     try {
-      await api.post('/api/training/knowledge/upload', formData, {
+      const { data } = await api.post('/api/training/knowledge/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setSuccess(`Knowledge source "${file.name}" added`);
+      const pineconeNote = data.semanticSearch
+        ? ` — ${data.pineconeChunks} vectors indexed in Pinecone ✓`
+        : '';
+      setSuccess(`✅ "${file.name}" uploaded (${data.chunks} chunks${pineconeNote})`);
       fetchKnowledge();
+      fetchPineconeStatus();
     } catch (err) {
       setError(err.response?.data?.error || 'Upload failed');
     } finally {
@@ -97,13 +119,29 @@ const TrainingPage = () => {
 
   const handleDeleteKnowledge = async (fileName) => {
     if (!window.confirm(`Permanently remove knowledge extracted from "${fileName}"?`)) return;
-
     try {
       await api.delete(`/api/training/knowledge/${encodeURIComponent(fileName)}`);
       fetchKnowledge();
-      setSuccess('Knowledge source removed');
+      fetchPineconeStatus();
+      setSuccess(`🗑️ "${fileName}" removed from knowledge base and Pinecone`);
     } catch (err) {
       setError('Failed to delete knowledge');
+    }
+  };
+
+  const handleReindex = async () => {
+    if (!window.confirm('Re-index ALL knowledge into Pinecone? This may take a few minutes for large collections.')) return;
+    setReindexing(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const { data } = await api.post('/api/training/knowledge/reindex');
+      setSuccess(`✅ Reindex complete — ${data.totalIndexed} vectors indexed into Pinecone`);
+      fetchPineconeStatus();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Reindex failed');
+    } finally {
+      setReindexing(false);
     }
   };
 
@@ -133,16 +171,71 @@ const TrainingPage = () => {
           <header className="training-header">
             <h1 className="training-title" style={{ marginTop: '1rem' }}>Sovereign AI Hub</h1>
             <p className="training-subtitle">
-              Configure your AI's worldview and logical defense strategies.
+              Configure your AI's worldview, logical strategies, and semantic knowledge base.
             </p>
           </header>
 
-          {/* Alert Notification Area */}
-          <div style={{ position: 'fixed', top: '2rem', right: '2rem', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Alert Notifications */}
+          <div style={{ position: 'fixed', top: '2rem', right: '2rem', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '400px' }}>
             {error && <div className="alert alert--error"><span>⚠️</span> {error}</div>}
             {success && <div className="alert alert--success"><span>✅</span> {success}</div>}
           </div>
 
+          {/* ── Pinecone Status Card ── */}
+          {pineconeStatus && (
+            <div className="training-card" style={{ borderColor: pineconeStatus.pineconeConfigured ? 'rgba(34,197,94,0.25)' : 'rgba(240,79,79,0.2)' }}>
+              <div className="training-label" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '1.1rem' }}>🧠</span>
+                Semantic Search Engine (Pinecone)
+                <span style={{
+                  marginLeft: 'auto',
+                  padding: '3px 10px',
+                  borderRadius: '999px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  background: pineconeStatus.pineconeConfigured ? 'rgba(34,197,94,0.15)' : 'rgba(240,79,79,0.15)',
+                  color: pineconeStatus.pineconeConfigured ? '#4ade80' : '#f87171',
+                  border: `1px solid ${pineconeStatus.pineconeConfigured ? 'rgba(34,197,94,0.3)' : 'rgba(240,79,79,0.3)'}`,
+                  letterSpacing: '0.05em'
+                }}>
+                  {pineconeStatus.pineconeConfigured ? '● ACTIVE' : '● NOT CONFIGURED'}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>MongoDB Chunks</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)' }}>{pineconeStatus.mongoDocuments}</div>
+                </div>
+                <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Search Method</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: pineconeStatus.pineconeConfigured ? '#4ade80' : '#a78bfa' }}>
+                    {pineconeStatus.pineconeConfigured ? 'Semantic Vector' : 'Text Keyword'}
+                  </div>
+                </div>
+              </div>
+              {pineconeStatus.pineconeConfigured && (
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <button
+                    onClick={handleReindex}
+                    disabled={reindexing}
+                    className="training-btn"
+                    style={{ margin: 0, padding: '9px 18px', fontSize: '0.82rem', background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', boxShadow: 'none' }}
+                  >
+                    {reindexing ? (
+                      <><div className="spinner-small" /> Re-indexing...</>
+                    ) : (
+                      <><span>🔄</span> Re-index All Books into Pinecone</>
+                    )}
+                  </button>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    Run this if books were uploaded before Pinecone was configured
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Persona Config ── */}
           <section className="training-grid">
             <div className="training-card">
               <div className="training-label">Designated Persona</div>
@@ -153,42 +246,54 @@ const TrainingPage = () => {
                 value={persona}
                 onChange={(e) => setPersona(e.target.value)}
               />
-              <div className="training-subtitle" style={{ fontSize: '0.8rem', margin: 0 }}>
+              <div className="training-subtitle" style={{ fontSize: '0.8rem', margin: '8px 0 0' }}>
                 This name defines the AI's identity across all chat sessions.
               </div>
             </div>
 
             <div className="training-card">
-              <div className="training-label">Core Logic & Strategy</div>
+              <div className="training-label" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                Core Logic & Strategy
+                <button
+                  onClick={handleLoadDefault}
+                  style={{
+                    marginLeft: 'auto', padding: '4px 10px', background: 'rgba(124,58,237,0.1)',
+                    border: '1px solid rgba(124,58,237,0.25)', borderRadius: '6px',
+                    color: 'var(--text-accent)', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'var(--font-sans)'
+                  }}
+                >
+                  Load Default
+                </button>
+              </div>
               <textarea
                 className="training-textarea"
-                placeholder="Instructions on how to refute atheistic claims logically..."
+                placeholder="Instructions on how to argue logically for Islam and respectfully refute other perspectives..."
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
               />
-              <div className="training-subtitle" style={{ fontSize: '0.8rem', margin: 0 }}>
-                Define the logical framework the AI must follow.
+              <div className="training-subtitle" style={{ fontSize: '0.8rem', margin: '8px 0 0' }}>
+                Define the logical framework. The AI uses this along with your uploaded books.
               </div>
             </div>
           </section>
 
-          <button
-            className="save-button"
-            onClick={handleSavePersona}
-            disabled={saving}
-          >
+          <button className="save-button" onClick={handleSavePersona} disabled={saving}>
             {saving ? <div className="spinner-small" /> : null}
             {saving ? 'Synchronizing Strategy...' : 'Commit Changes to Core'}
           </button>
 
+          {/* ── Knowledge Base ── */}
           <section className="kb-section">
             <div className="section-header">
               <h2 className="section-title">Global Knowledge Base</h2>
-              <span className="training-label" style={{ opacity: 0.6 }}>RAG System Active</span>
+              <span className="training-label" style={{ opacity: 0.6 }}>
+                {pineconeStatus?.pineconeConfigured ? '🧠 Semantic RAG Active' : '📝 Keyword RAG Active'}
+              </span>
             </div>
 
             <p className="training-subtitle" style={{ margin: '0 0 2rem 0', textAlign: 'left', maxWidth: '100%' }}>
-              Upload scholarly PDFs or text logs. The AI will prioritize this data when generating proofs or logical refutations.
+              Upload scholarly PDFs or text files. Each upload is automatically chunked and indexed into Pinecone for deep semantic search.
+              The AI will find the most relevant passages from your books to ground every answer.
             </p>
 
             <div className="kb-upload-zone">
@@ -204,13 +309,14 @@ const TrainingPage = () => {
                 {uploading ? (
                   <>
                     <div className="spinner" style={{ width: '40px', height: '40px', marginBottom: '1.5rem' }} />
-                    <span className="training-label">Analyzing & Indexing...</span>
+                    <span className="training-label">Processing & Indexing into Pinecone...</span>
+                    <span style={{ fontSize: '0.78rem', marginTop: '0.5rem', opacity: 0.6 }}>This may take a moment for large files</span>
                   </>
                 ) : (
                   <>
                     <span className="kb-upload-icon">💠</span>
                     <span className="training-label">Ingest New Knowledge Source</span>
-                    <span style={{ fontSize: '0.8rem', marginTop: '0.5rem', opacity: 0.6 }}>Supports PDF and TXT</span>
+                    <span style={{ fontSize: '0.8rem', marginTop: '0.5rem', opacity: 0.6 }}>Supports PDF and TXT · Auto-indexed in Pinecone</span>
                   </>
                 )}
               </label>
@@ -226,7 +332,13 @@ const TrainingPage = () => {
                       </span>
                       <div>
                         <div className="knowledge-item__name">{item.fileName}</div>
-                        <div className="knowledge-item__meta">{item.chunks} logical snippets</div>
+                        <div className="knowledge-item__meta">
+                          {item.chunks} chunks
+                          {item.pineconeIndexed
+                            ? <span style={{ marginLeft: '8px', color: '#4ade80', fontSize: '0.7rem' }}>● Pinecone</span>
+                            : <span style={{ marginLeft: '8px', color: '#a78bfa', fontSize: '0.7rem' }}>○ MongoDB only</span>
+                          }
+                        </div>
                       </div>
                     </div>
                     <button
@@ -242,7 +354,7 @@ const TrainingPage = () => {
                 ))
               ) : (
                 <div className="knowledge-empty" style={{ gridColumn: '1 / -1' }}>
-                  No knowledge sources indexed yet. Start by uploading a file above.
+                  No knowledge sources indexed yet. Upload a PDF or TXT file above to begin.
                 </div>
               )}
             </div>

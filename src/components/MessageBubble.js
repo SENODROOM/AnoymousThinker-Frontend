@@ -22,10 +22,15 @@ const parseMarkdown = (text) => {
   html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
   html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // Handle source citation line with special styling
+  html = html.replace(/📚 \*Sources referenced: (.+?)\*/g,
+    '<div class="msg-sources">📚 <em>Sources: $1</em></div>'
+  );
   html = html.split('\n\n').map(p => {
     p = p.trim();
     if (!p) return '';
-    if (p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<ol') || p.startsWith('<pre') || p.startsWith('<blockquote')) return p;
+    if (p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<ol') ||
+        p.startsWith('<pre') || p.startsWith('<blockquote') || p.startsWith('<div')) return p;
     return `<p>${p.replace(/\n/g, '<br/>')}</p>`;
   }).join('\n');
   return html;
@@ -61,26 +66,9 @@ const MessageBubble = ({ message, isLast }) => {
           <span className="msg-role-name">AnonymousThinker</span>
         )}
 
-        <div className={`msg-bubble msg-bubble--${isUser ? 'user' : 'ai'}${message.comparisonContent ? ' msg-bubble--comparison' : ''}`}>
+        <div className={`msg-bubble msg-bubble--${isUser ? 'user' : 'ai'}`}>
           {isUser ? (
             <p>{message.content}</p>
-          ) : message.comparisonContent ? (
-            <div className="comparison-container">
-              <div className="comparison-pane">
-                <span className="comparison-label">Personal Model (8B)</span>
-                <div
-                  className="message-content"
-                  dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }}
-                />
-              </div>
-              <div className="comparison-pane comparison-pane--powerful">
-                <span className="comparison-label">Powerful Model (70B)</span>
-                <div
-                  className="message-content"
-                  dangerouslySetInnerHTML={{ __html: parseMarkdown(message.comparisonContent) }}
-                />
-              </div>
-            </div>
           ) : (
             <div
               className="message-content"

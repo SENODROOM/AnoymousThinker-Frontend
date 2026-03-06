@@ -23,7 +23,6 @@ const ChatPage = () => {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [input, setInput] = useState('');
-  const [compare, setCompare] = useState(false);
   const [welcomePrompt] = useState(WELCOME_PROMPTS[Math.floor(Math.random() * WELCOME_PROMPTS.length)]);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -32,16 +31,12 @@ const ChatPage = () => {
   // Clear errors after 5 seconds
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => {
-        setError(null);
-      }, 5000);
+      const timer = setTimeout(() => setError(null), 5000);
       return () => clearTimeout(timer);
     }
   }, [error, setError]);
 
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+  useEffect(() => { fetchConversations(); }, [fetchConversations]);
 
   useEffect(() => {
     if (id) loadConversation(id);
@@ -50,9 +45,7 @@ const ChatPage = () => {
   useEffect(() => {
     if (messagesEndRef.current) {
       const isSwitching = lastIdRef.current !== id;
-      messagesEndRef.current.scrollIntoView({
-        behavior: isSwitching ? 'auto' : 'smooth'
-      });
+      messagesEndRef.current.scrollIntoView({ behavior: isSwitching ? 'auto' : 'smooth' });
       lastIdRef.current = id;
     }
   }, [currentConversation?.messages, id, sending]);
@@ -76,14 +69,13 @@ const ChatPage = () => {
       await new Promise(r => setTimeout(r, 100));
     }
     const msg = input.trim();
-    const isComparing = compare; // Capture current state
     setInput('');
     try {
-      await sendMessage(convId, msg, isComparing);
+      await sendMessage(convId, msg);
     } catch (err) {
       setInput(msg);
     }
-  }, [input, sending, id, createConversation, navigate, sendMessage, setError, compare]);
+  }, [input, sending, id, createConversation, navigate, sendMessage, setError]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -170,17 +162,6 @@ const ChatPage = () => {
           )}
         </div>
 
-        {/* Notification Area */}
-        {/* <div style={{ position: 'fixed', top: '2rem', right: '2rem', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {error && (
-            <div className="alert alert--error fade-in">
-              <span>⚠️</span>
-              <div style={{ flex: 1 }}>{error}</div>
-              <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', marginLeft: '10px' }}>✕</button>
-            </div>
-          )}
-        </div> */}
-
         {/* Input area */}
         <div className="input-area">
           <div className="input-wrapper">
@@ -196,17 +177,8 @@ const ChatPage = () => {
             />
             <div className="input-footer">
               <div className="input-footer__left">
-                <button
-                  onClick={() => setCompare(!compare)}
-                  className={`compare-toggle${compare ? ' compare-toggle--active' : ''}`}
-                  title="Compare with DeepSeek-R1-70B"
-                  disabled={sending}
-                >
-                  <div className="compare-toggle__dot" />
-                  Compare Models
-                </button>
                 <span className={`input-hint${sending ? ' input-hint--thinking' : ''}`}>
-                  {sending ? '● Thinking...' : 'Enter to send · Shift+Enter for new line'}
+                  {sending ? '● Searching knowledge base & thinking...' : 'Enter to send · Shift+Enter for new line'}
                 </span>
               </div>
               <button
@@ -222,7 +194,7 @@ const ChatPage = () => {
             </div>
           </div>
           <p className="input-disclaimer">
-            AnonymousThinker can make mistakes. Verify important info.
+            AnonymousThinker uses your uploaded books for grounded, evidence-based answers.
           </p>
         </div>
       </main>
